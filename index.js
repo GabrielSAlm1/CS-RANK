@@ -49,20 +49,15 @@ async function processarSteamIds() {
   for (const steamId of steamIds) {
     await robo(steamId);
   }
-
-  // Salvar os resultados em um arquivo JSON
-  const jsonResultados = JSON.stringify(resultados, null, 2);
-  await fs.writeFile('resultado.json', jsonResultados);
 }
 
 const app = express();
 
 app.get('/resultado', async (req, res) => {
   await processarSteamIds();
-
-  // Ler o arquivo e enviar como resposta
-  const fileContents = await fs.readFile('resultado.json', 'utf-8');
-  res.json(JSON.parse(fileContents));
+  
+  // Retorna os resultados em JSON como resposta à requisição GET
+  res.json(resultados);
 });
 
 // Inicia o servidor Express na porta 3000 (ou na porta definida pela variável de ambiente PORT)
