@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+require("dontenv").config();
 const fs = require('fs').promises;
 
 const steamIds = ['76561198112048366', '76561198107664446', '76561198127888167', '76561198191772670', '76561198218622723', '76561199110088832'];
@@ -7,11 +8,15 @@ const resultados = {};
 async function robo(steamId) {
   const browser = await puppeteer.launch({
     args: [
-    "--disable-setuid-sandbox",
-    "--no-sandbox",
-    "--single-process",
-    "--no-zygote",
-  ],
+      "--disable-setuid-sandbox",
+      "--no-sandbox",
+      "--single-process",
+      "--no-zygote",
+    ],
+    executablePath:
+      process.env.NODE_ENV === "production"
+        ? process.env.PUPPETEER_EXECUTABLE_PATH
+        : puppeteer.executablePath(),
 });
   const page = await browser.newPage();
   await page.setUserAgent('Mozilla/5.0 (Windows NT 5.1; rv:5.0) Gecko/20100101 Firefox/5.0');
