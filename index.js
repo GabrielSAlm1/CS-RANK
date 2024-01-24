@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-require("dontenv").config();
+require("dotenv").config();
 const fs = require('fs').promises;
 
 const steamIds = ['76561198112048366', '76561198107664446', '76561198127888167', '76561198191772670', '76561198218622723', '76561199110088832'];
