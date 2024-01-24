@@ -5,7 +5,14 @@ const steamIds = ['76561198112048366', '76561198107664446', '76561198127888167',
 const resultados = {};
 
 async function robo(steamId) {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: [
+    "--disable-setuid-sandbox",
+    "--no-sandbox",
+    "--single-process",
+    "--no-zygote",
+  ],
+});
   const page = await browser.newPage();
   await page.setUserAgent('Mozilla/5.0 (Windows NT 5.1; rv:5.0) Gecko/20100101 Firefox/5.0');
   const qualquerUrl = `https://csstats.gg/player/${steamId}`;
