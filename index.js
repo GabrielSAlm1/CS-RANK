@@ -13,6 +13,7 @@ async function robo(steamId) {
       "--no-sandbox",
       "--single-process",
       "--no-zygote",
+      '--disable-features=site-per-process'
     ],
     executablePath:
       process.env.NODE_ENV === "production"
