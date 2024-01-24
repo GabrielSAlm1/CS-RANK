@@ -46,9 +46,18 @@ async function robo(steamId) {
 }
 
 async function processarSteamIds() {
-  for (const steamId of steamIds) {
-    await robo(steamId);
+  while (true) {
+    for (const steamId of steamIds) {
+      await robo(steamId);
+    }
+
+    await esperar(20000); // Aguarda 20 segundos antes de reiniciar o loop
   }
+}
+
+// Função para esperar um determinado número de milissegundos
+function esperar(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 const app = express();
