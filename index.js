@@ -86,4 +86,20 @@ app.get('/resultado', async (req, res) => {
 const port = process.env.PORT || 10000;
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
+
+  // Inicia o Puppeteer imediatamente
+  executarPuppeteer();
+
+  // Configura intervalo para executar o Puppeteer a cada 20 segundos
+  setInterval(executarPuppeteer, 20000);
 });
+
+// Função para executar o Puppeteer e processar as Steam IDs
+async function executarPuppeteer() {
+  try {
+    await processarSteamIds();
+    console.log('Puppeteer executado com sucesso.');
+  } catch (error) {
+    console.error('Erro ao executar o Puppeteer:', error);
+  }
+}
