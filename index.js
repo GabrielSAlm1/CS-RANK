@@ -3,7 +3,7 @@ const express = require('express');
 require('dotenv').config();
 
 const steamIds = ['76561198112048366', '76561198107664446', '76561198127888167', '76561198191772670', '76561198218622723', '76561199110088832'];
-const resultados = {};
+let resultados = null; // Armazena os resultados globalmente
 
 async function robo(steamId) {
   const browser = await puppeteer.launch({
@@ -50,6 +50,7 @@ async function robo(steamId) {
 }
 
 async function processarSteamIds() {
+  resultados = {}; // Inicializa os resultados antes de começar o processamento
   for (const steamId of steamIds) {
     await robo(steamId);
     await esperar(5000);
@@ -68,35 +69,15 @@ app.get('/', async (req, res) => {
 
 app.get('/resultado', async (req, res) => {
   try {
-    await processarSteamIds();
+    if (!resultados) {
+      // Se os resultados não foram processados, ou seja, a primeira vez que alguém acessa /resultado
+      await processarSteamIds();
+    }
+
     // Envia os resultados como resposta JSON
     res.json(resultados);
   } catch (error) {
     console.error(error);
-  } finally {
-    // Fecha o navegador após o processamento de todas as Steam IDs
-    for (const steamId of steamIds) {
-      if (resultados[steamId] === undefined) {
-        // Se não houve resultado para uma Steam ID, ainda precisamos fechar o navegador
-        const browser = await puppeteer.launch({
-          args: [
-            "--disable-setuid-sandbox",
-            "--no-sandbox",
-            "--single-process",
-            "--no-zygote",
-          ],
-          executablePath:
-            process.env.NODE_ENV === "production"
-              ? process.env.PUPPETEER_EXECUTABLE_PATH
-              : puppeteer.executablePath(),
-        });
-        await browser.close();
-        break; // Sai do loop após fechar o navegador
-      }
-    }
-
-    // Encerra o servidor após o processamento
-    process.exit(0);
   }
 });
 
