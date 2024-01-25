@@ -65,13 +65,19 @@ async function processarSteamIds() {
   console.log("Processamento concluído.");
 }
 
+// Listener para o evento 'exit' do processo
+function cicloExitListener() {
+  clearInterval(intervalId);
+}
+
+// Adicionar listener para o evento 'exit' do processo
+process.on('exit', cicloExitListener);
+
 async function iniciarCiclo() {
   await processarSteamIds();
 
-  // Limpar o intervalo se já estiver configurado
-  if (intervalId) {
-    clearInterval(intervalId);
-  }
+  // Remover listeners antigos para evitar vazamento de memória
+  process.removeListener('exit', cicloExitListener);
 
   // Configurar um novo intervalo
   intervalId = setInterval(async () => {
@@ -79,10 +85,6 @@ async function iniciarCiclo() {
   }, 30000); // Aguarda 30 segundos antes de iniciar o próximo ciclo
 
   console.log("Aguardando 30 segundos antes do próximo ciclo...");
-}
-
-async function esperar(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function esperar(ms) {
