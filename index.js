@@ -47,7 +47,12 @@ async function robo(steamId) {
 async function processarSteamIds() {
   for (const steamId of steamIds) {
     await robo(steamId);
+    await esperar(5000); // Aguarda 5 segundos entre as verificações
   }
+}
+
+async function esperar(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 const app = express();
