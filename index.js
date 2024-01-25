@@ -7,6 +7,7 @@ let resultados = null; // Armazena os resultados globalmente
 
 async function robo(steamId) {
   const browser = await puppeteer.launch({
+    headless: 'new',
     args: [
       "--disable-setuid-sandbox",
       "--no-sandbox",
