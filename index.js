@@ -6,7 +6,20 @@ const fs = require('fs').promises;
 const steamIds = ['76561198112048366', '76561198107664446', '76561198127888167', '76561198191772670', '76561198218622723', '76561199110088832'];
 const resultados = {};
 
-async function robo(steamId, browser) {
+async function robo(steamId) {
+  const browser = await puppeteer.launch({
+    args: [
+      "--disable-setuid-sandbox",
+      "--no-sandbox",
+      "--single-process",
+      "--no-zygote",
+    ],
+    executablePath:
+      process.env.NODE_ENV === "production"
+        ? process.env.PUPPETEER_EXECUTABLE_PATH
+        : puppeteer.executablePath(),
+  });
+
   const page = await browser.newPage();
   await page.setUserAgent('Mozilla/5.0 (Windows NT 5.1; rv:5.0) Gecko/20100101 Firefox/5.0');
 
@@ -29,39 +42,27 @@ async function robo(steamId, browser) {
     rank: resultado.rank,
   };
 
-  await page.close();
+  await browser.close();
 }
 
-async function processarSteamIds(browser) {
+async function processarSteamIds() {
   for (const steamId of steamIds) {
-    await robo(steamId, browser);
+    await robo(steamId);
   }
+
+  // Salvar os resultados em um arquivo JSON
+  const jsonResultados = JSON.stringify(resultados, null, 2);
+  await fs.writeFile('resultado.json', jsonResultados);
 }
 
 const app = express();
 
 app.get('/resultado', async (req, res) => {
-  // Criar uma instância do navegador fora do escopo do loop
-  const browser = await puppeteer.launch({
-    args: [
-      "--disable-setuid-sandbox",
-      "--no-sandbox",
-      "--single-process",
-      "--no-zygote",
-    ],
-    executablePath:
-      process.env.NODE_ENV === "production"
-        ? process.env.PUPPETEER_EXECUTABLE_PATH
-        : puppeteer.executablePath(),
-  });
+  await processarSteamIds();
 
-  await processarSteamIds(browser);
-
-  // Após verificar todos os steamId, feche o browser
-  await browser.close();
-  
-  // Retorna os resultados em JSON como resposta à requisição GET
-  res.json(resultados);
+  // Ler o arquivo e enviar como resposta
+  const fileContents = await fs.readFile('resultado.json', 'utf-8');
+  res.json(JSON.parse(fileContents));
 });
 
 // Inicia o servidor Express na porta 3000 (ou na porta definida pela variável de ambiente PORT)
