@@ -3,11 +3,10 @@ const express = require('express');
 require('dotenv').config();
 
 const steamIds = ['76561198112048366', '76561198107664446', '76561198127888167', '76561198191772670', '76561198218622723', '76561199110088832'];
-let resultados = {}; // Armazena os resultados globalmente
-let intervalId = null; // Armazena o ID do intervalo
+let resultados = {};
+let intervalId = null;
 
-// Aumentar o limite de ouvintes de eventos do processo
-process.setMaxListeners(20); // ou qualquer valor que você considere apropriado
+process.setMaxListeners(20);
 
 async function robo(steamId) {
   const browser = await puppeteer.launch({
@@ -62,37 +61,32 @@ async function robo(steamId) {
 }
 
 async function processarSteamIds() {
-  const novosResultados = {}; // Armazenar os novos resultados temporariamente
+  const novosResultados = {};
 
   for (const steamId of steamIds) {
     await robo(steamId);
-    await esperar(5000); // Aguarda 5 segundos entre cada consulta
+    await esperar(5000);
   }
 
-  // Mesclar os novos resultados com os antigos
   resultados = { ...resultados, ...novosResultados };
 
   console.log("Processamento concluído.");
 }
 
-// Listener para o evento 'exit' do processo
 function cicloExitListener() {
   clearInterval(intervalId);
 }
 
-// Adicionar listener para o evento 'exit' do processo
 process.on('exit', cicloExitListener);
 
 async function iniciarCiclo() {
   await processarSteamIds();
 
-  // Remover listeners antigos para evitar vazamento de memória
   process.removeListener('exit', cicloExitListener);
 
-  // Configurar um novo intervalo
   intervalId = setInterval(async () => {
     await processarSteamIds();
-  }, 30000); // Aguarda 30 segundos antes de iniciar o próximo ciclo
+  }, 30000);
 
   console.log("Aguardando 30 segundos antes do próximo ciclo...");
 }
@@ -104,28 +98,24 @@ async function esperar(ms) {
 const app = express();
 
 app.get('/', async (req, res) => {
-  res.send("Ta funcionando!!!");
+  res.send("Ta funcionando!!!!");
 });
 
 app.get('/resultado', async (req, res) => {
   try {
     if (!resultados) {
-      // Se os resultados não foram processados, ou seja, a primeira vez que alguém acessa /resultado
       await processarSteamIds();
     }
 
-    // Envia os resultados como resposta JSON
     res.json(resultados);
   } catch (error) {
     console.error(error);
   }
 });
 
-// Inicia o servidor Express na porta 3000 (ou na porta definida pela variável de ambiente PORT)
 const port = process.env.PORT || 10000;
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
 
-// Inicia o ciclo de processamento
 iniciarCiclo();
