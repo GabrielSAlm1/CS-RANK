@@ -53,8 +53,17 @@ async function processarSteamIds() {
   resultados = {}; // Inicializa os resultados antes de começar o processamento
   for (const steamId of steamIds) {
     await robo(steamId);
-    await esperar(5000);
+    await esperar(5000); // Aguarda 5 segundos entre cada consulta
   }
+
+  console.log("Processamento concluído. Aguardando 30 segundos antes do próximo ciclo...");
+}
+
+async function iniciarCiclo() {
+  await processarSteamIds();
+  setInterval(async () => {
+    await processarSteamIds();
+  }, 30000); // Aguarda 30 segundos antes de iniciar o próximo ciclo
 }
 
 async function esperar(ms) {
@@ -85,20 +94,7 @@ app.get('/resultado', async (req, res) => {
 const port = process.env.PORT || 10000;
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
-
-  // Inicia o Puppeteer imediatamente
-  executarPuppeteer();
-
-  // Configura intervalo para executar o Puppeteer a cada 20 segundos
-  setInterval(executarPuppeteer, 20000);
 });
 
-// Função para executar o Puppeteer e processar as Steam IDs
-async function executarPuppeteer() {
-  try {
-    await processarSteamIds();
-    console.log('Puppeteer executado com sucesso.');
-  } catch (error) {
-    console.error('Erro ao executar o Puppeteer:', error);
-  }
-}
+// Inicia o ciclo de processamento
+iniciarCiclo();
