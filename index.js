@@ -7,10 +7,48 @@ let resultados = {}; // Armazena os resultados globalmente
 let intervalId = null; // Armazena o ID do intervalo
 
 async function robo(steamId) {
-  // ... (restante do código robo)
+  const browser = await puppeteer.launch({
+    args: [
+      "--disable-setuid-sandbox",
+      "--no-sandbox",
+      "--single-process",
+      "--no-zygote",
+    ],
+    executablePath:
+      process.env.NODE_ENV === "production"
+        ? process.env.PUPPETEER_EXECUTABLE_PATH
+        : puppeteer.executablePath(),
+  });
 
-  // Fechar a página, mas não o navegador, para que seja possível processar outras Steam IDs
-  await page.close();
+  const page = await browser.newPage();
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 5.1; rv:5.0) Gecko/20100101 Firefox/5.0');
+
+  const qualquerUrl = `https://csstats.gg/player/${steamId}`;
+  try {
+    await page.goto(qualquerUrl);
+
+    const resultado = await page.evaluate((steamId) => {
+      let cs2Rank = document.querySelector('#cs2-rank');
+      let cs2Rating = cs2Rank.querySelector('.cs2rating');
+      let spanElement = cs2Rating.querySelector('span');
+
+      return {
+        steamId,
+        rank: spanElement.textContent.trim(),
+      };
+    }, steamId);
+
+    resultados[steamId] = {
+      steamId: steamId,
+      rank: resultado.rank,
+      timestamp: Date.now(),
+    };
+  } catch (error) {
+    console.error(`Erro ao processar ${steamId}: ${error}`);
+  } finally {
+    // Fechar a página, mas não o navegador, para que seja possível processar outras Steam IDs
+    await page.close();
+  }
 }
 
 async function processarSteamIds() {
@@ -41,6 +79,10 @@ async function iniciarCiclo() {
   }, 30000); // Aguarda 30 segundos antes de iniciar o próximo ciclo
 
   console.log("Aguardando 30 segundos antes do próximo ciclo...");
+}
+
+async function esperar(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function esperar(ms) {
