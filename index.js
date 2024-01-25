@@ -62,13 +62,17 @@ app.get('/', async (req, res) => {
 });
 
 app.get('/resultado', async (req, res) => {
-  await processarSteamIds();
+  try {
+    await processarSteamIds();
 
-  // Envia os resultados como resposta JSON
-  res.json(resultados);
-
-  // Encerra o servidor após o processamento
-  process.exit(0);
+    // Envia os resultados como resposta JSON
+    res.json(resultados);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    // Encerra o servidor após o processamento
+    process.exit(0);
+  }
 });
 
 // Inicia o servidor Express na porta 3000 (ou na porta definida pela variável de ambiente PORT)
