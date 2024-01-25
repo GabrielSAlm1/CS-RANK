@@ -6,6 +6,9 @@ const steamIds = ['76561198112048366', '76561198107664446', '76561198127888167',
 let resultados = {}; // Armazena os resultados globalmente
 let intervalId = null; // Armazena o ID do intervalo
 
+// Aumentar o limite de ouvintes de eventos do processo
+process.setMaxListeners(20); // ou qualquer valor que você considere apropriado
+
 async function robo(steamId) {
   const browser = await puppeteer.launch({
     args: [
@@ -52,7 +55,9 @@ async function robo(steamId) {
     console.error(`Erro ao processar ${steamId}: ${error}`);
   } finally {
     // Fechar a página, mas não o navegador, para que seja possível processar outras Steam IDs
-    await page.close();
+    if (!page.isClosed()) {
+      await page.close();
+    }
   }
 }
 
