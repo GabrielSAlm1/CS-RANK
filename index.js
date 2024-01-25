@@ -41,7 +41,7 @@ async function robo(steamId) {
     rank: resultado.rank,
   };
 
-  
+  browser.close();
 }
 
 async function processarSteamIds() {
@@ -49,8 +49,6 @@ async function processarSteamIds() {
     await robo(steamId);
     await esperar(5000);
   }
-
-  await browser.close();
 }
 
 async function esperar(ms) {
