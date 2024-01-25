@@ -67,34 +67,35 @@ async function robo(steamId) {
 }
 
 async function processarSteamIds() {
-  const novosResultados = {};
+  try {
+    const novosResultados = {};
 
-  for (const steamId of steamIds) {
-    await robo(steamId);
-    await esperar(5000);
+    for (const steamId of steamIds) {
+      await robo(steamId);
+      await esperar(5000);
+    }
+
+    resultados = { ...resultados, ...novosResultados };
+
+    console.log("Processamento concluído.");
+  } catch (error) {
+    console.error('Erro ao processar Steam IDs:', error);
   }
-
-  resultados = { ...resultados, ...novosResultados };
-
-  console.log("Processamento concluído.");
 }
-
-function cicloExitListener() {
-  clearInterval(intervalId);
-}
-
-process.on('exit', cicloExitListener);
 
 async function iniciarCiclo() {
-  await processarSteamIds();
-
-  process.removeListener('exit', cicloExitListener);
-
-  intervalId = setInterval(async () => {
+  try {
     await processarSteamIds();
-  }, 30000);
-
-  console.log("Aguardando 30 segundos antes do próximo ciclo...");
+    intervalId = setInterval(async () => {
+      try {
+        await processarSteamIds();
+      } catch (error) {
+        console.error('Erro no ciclo:', error);
+      }
+    }, 30000);
+  } catch (error) {
+    console.error('Erro ao iniciar ciclo:', error);
+  }
 }
 
 async function esperar(ms) {
