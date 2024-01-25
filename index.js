@@ -23,25 +23,30 @@ async function robo(steamId) {
   await page.setUserAgent('Mozilla/5.0 (Windows NT 5.1; rv:5.0) Gecko/20100101 Firefox/5.0');
 
   const qualquerUrl = `https://csstats.gg/player/${steamId}`;
-  await page.goto(qualquerUrl);
+  try {
+    await page.goto(qualquerUrl);
 
-  const resultado = await page.evaluate((steamId) => {
-    let cs2Rank = document.querySelector('#cs2-rank');
-    let cs2Rating = cs2Rank.querySelector('.cs2rating');
-    let spanElement = cs2Rating.querySelector('span');
+    const resultado = await page.evaluate((steamId) => {
+      let cs2Rank = document.querySelector('#cs2-rank');
+      let cs2Rating = cs2Rank.querySelector('.cs2rating');
+      let spanElement = cs2Rating.querySelector('span');
 
-    return {
-      steamId,
-      rank: spanElement.textContent.trim(),
+      return {
+        steamId,
+        rank: spanElement.textContent.trim(),
+      };
+    }, steamId);
+
+    resultados[steamId] = {
+      steamId: steamId,
+      rank: resultado.rank,
     };
-  }, steamId);
-
-  resultados[steamId] = {
-    steamId: steamId,
-    rank: resultado.rank,
-  };
-
-  browser.close();
+  } catch (error) {
+    console.error(`Erro ao processar ${steamId}: ${error}`);
+  } finally {
+    // Fechar a página, mas não o navegador, para que seja possível processar outras Steam IDs
+    await page.close();
+  }
 }
 
 async function processarSteamIds() {
@@ -64,12 +69,32 @@ app.get('/', async (req, res) => {
 app.get('/resultado', async (req, res) => {
   try {
     await processarSteamIds();
-
     // Envia os resultados como resposta JSON
     res.json(resultados);
   } catch (error) {
     console.error(error);
   } finally {
+    // Fecha o navegador após o processamento de todas as Steam IDs
+    for (const steamId of steamIds) {
+      if (resultados[steamId] === undefined) {
+        // Se não houve resultado para uma Steam ID, ainda precisamos fechar o navegador
+        const browser = await puppeteer.launch({
+          args: [
+            "--disable-setuid-sandbox",
+            "--no-sandbox",
+            "--single-process",
+            "--no-zygote",
+          ],
+          executablePath:
+            process.env.NODE_ENV === "production"
+              ? process.env.PUPPETEER_EXECUTABLE_PATH
+              : puppeteer.executablePath(),
+        });
+        await browser.close();
+        break; // Sai do loop após fechar o navegador
+      }
+    }
+
     // Encerra o servidor após o processamento
     process.exit(0);
   }
