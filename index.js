@@ -23,32 +23,40 @@ async function robo(steamId) {
   const page = await browser.newPage();
   await page.setUserAgent('Mozilla/5.0 (Windows NT 5.1; rv:5.0) Gecko/20100101 Firefox/5.0');
 
-  const qualquerUrl = `https://csstats.gg/player/${steamId}`;
-  await page.goto(qualquerUrl);
+  try {
+    const qualquerUrl = `https://csstats.gg/player/${steamId}`;
+    await page.goto(qualquerUrl);
 
-  const resultado = await page.evaluate((steamId) => {
-    let cs2Rank = document.querySelector('#cs2-rank');
-    let cs2Rating = cs2Rank.querySelector('.cs2rating');
-    let spanElement = cs2Rating.querySelector('span');
+    const resultado = await page.evaluate((steamId) => {
+      let cs2Rank = document.querySelector('#cs2-rank');
+      let cs2Rating = cs2Rank.querySelector('.cs2rating');
+      let spanElement = cs2Rating.querySelector('span');
 
-    return {
-      steamId,
-      rank: spanElement.textContent.trim(),
+      return {
+        steamId,
+        rank: spanElement.textContent.trim(),
+      };
+    }, steamId);
+
+    resultados[steamId] = {
+      steamId: steamId,
+      rank: resultado.rank,
     };
-  }, steamId);
-
-  resultados[steamId] = {
-    steamId: steamId,
-    rank: resultado.rank,
-  };
-
-  await browser.close();
+  } catch (error) {
+    console.error(`Erro ao processar ${steamId}: ${error.message}`);
+  } finally {
+    await browser.close();
+  }
 }
 
 async function processarSteamIds() {
   while (true) {
     for (const steamId of steamIds) {
-      await robo(steamId);
+      try {
+        await robo(steamId);
+      } catch (error) {
+        console.error(`Erro ao processar ${steamId}: ${error.message}`);
+      }
     }
 
     await esperar(20000); // Aguarda 20 segundos antes de reiniciar o loop
@@ -70,7 +78,7 @@ app.get('/resultado', async (req, res) => {
 });
 
 // Inicia o servidor Express na porta 3000 (ou na porta definida pela variável de ambiente PORT)
-const port = process.env.PORT || 10000;
+const port = process.env.PORT || 4000;
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
