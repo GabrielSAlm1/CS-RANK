@@ -27,22 +27,27 @@ async function robo(steamId) {
   try {
     await page.goto(qualquerUrl);
 
-    const resultado = await page.evaluate((steamId) => {
-      let cs2Rank = document.querySelector('#cs2-rank');
-      let cs2Rating = cs2Rank.querySelector('.cs2rating');
-      let spanElement = cs2Rating.querySelector('span');
+    // Adicione uma verificação para garantir que a página ainda esteja aberta
+    if (!page.isClosed()) {
+      const resultado = await page.evaluate((steamId) => {
+        let cs2Rank = document.querySelector('#cs2-rank');
+        let cs2Rating = cs2Rank.querySelector('.cs2rating');
+        let spanElement = cs2Rating.querySelector('span');
 
-      return {
-        steamId,
-        rank: spanElement.textContent.trim(),
+        return {
+          steamId,
+          rank: spanElement.textContent.trim(),
+        };
+      }, steamId);
+
+      resultados[steamId] = {
+        steamId: steamId,
+        rank: resultado.rank,
+        timestamp: Date.now(),
       };
-    }, steamId);
-
-    resultados[steamId] = {
-      steamId: steamId,
-      rank: resultado.rank,
-      timestamp: Date.now(),
-    };
+    } else {
+      console.error(`Erro ao processar ${steamId}: Página fechada.`);
+    }
   } catch (error) {
     console.error(`Erro ao processar ${steamId}: ${error}`);
   } finally {
