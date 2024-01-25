@@ -44,10 +44,11 @@ async function robo(steamId) {
   await browser.close();
 }
 
-async function processarSteamIds() {
-  for (const steamId of steamIds) {
-    await robo(steamId);
-    await esperar(5000); // Aguarda 5 segundos entre as verificações
+async function processarSteamIds(index = 0) {
+  if (index < steamIds.length) {
+    await robo(steamIds[index]);
+    await esperar(5000);
+    await processarSteamIds(index + 1);
   }
 }
 
