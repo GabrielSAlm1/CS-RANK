@@ -44,11 +44,10 @@ async function robo(steamId) {
   await browser.close();
 }
 
-async function processarSteamIds(index = 0) {
-  if (index < steamIds.length) {
-    await robo(steamIds[index]);
+async function processarSteamIds() {
+  for (const steamId of steamIds) {
+    await robo(steamId);
     await esperar(5000);
-    await processarSteamIds(index + 1);
   }
 }
 
@@ -67,6 +66,9 @@ app.get('/resultado', async (req, res) => {
 
   // Envia os resultados como resposta JSON
   res.json(resultados);
+
+  // Encerra o servidor após o processamento
+  process.exit(0);
 });
 
 // Inicia o servidor Express na porta 3000 (ou na porta definida pela variável de ambiente PORT)
