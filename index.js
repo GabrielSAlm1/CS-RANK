@@ -42,10 +42,14 @@ async function robo(steamId) {
         let cs2Rating = cs2Rank.querySelector('.cs2rating');
         let spanElement = cs2Rating.querySelector('span');
 
-        return {
-          steamId,
-          rank: spanElement.textContent.trim(),
-        };
+        if (!page.isClosed()) {
+          return {
+            steamId,
+            rank: spanElement.textContent.trim(),
+          };
+        } else {
+          return null;
+        }
       }, steamId);
 
       resultados[steamId] = {
