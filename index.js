@@ -3,7 +3,7 @@ const express = require('express');
 require('dotenv').config();
 
 const steamIds = ['76561198112048366', '76561198107664446', '76561198127888167', '76561198191772670', '76561198218622723', '76561199110088832'];
-let resultados = null; // Armazena os resultados globalmente
+let resultados = {}; // Armazena os resultados globalmente
 
 async function robo(steamId) {
   const browser = await puppeteer.launch({
@@ -40,6 +40,7 @@ async function robo(steamId) {
     resultados[steamId] = {
       steamId: steamId,
       rank: resultado.rank,
+      timestamp: Date.now(),
     };
   } catch (error) {
     console.error(`Erro ao processar ${steamId}: ${error}`);
@@ -50,11 +51,15 @@ async function robo(steamId) {
 }
 
 async function processarSteamIds() {
-  resultados = {}; // Inicializa os resultados antes de começar o processamento
+  const novosResultados = {}; // Armazenar os novos resultados temporariamente
+
   for (const steamId of steamIds) {
     await robo(steamId);
     await esperar(5000); // Aguarda 5 segundos entre cada consulta
   }
+
+  // Mesclar os novos resultados com os antigos
+  resultados = { ...resultados, ...novosResultados };
 
   console.log("Processamento concluído. Aguardando 30 segundos antes do próximo ciclo...");
 }
