@@ -1,7 +1,6 @@
 const puppeteer = require('puppeteer');
 const express = require('express');
 require('dotenv').config();
-const fs = require('fs').promises;
 
 const steamIds = ['76561198112048366', '76561198107664446', '76561198127888167', '76561198191772670', '76561198218622723', '76561199110088832'];
 const resultados = {};
@@ -49,20 +48,19 @@ async function processarSteamIds() {
   for (const steamId of steamIds) {
     await robo(steamId);
   }
-
-  // Salvar os resultados em um arquivo JSON
-  const jsonResultados = JSON.stringify(resultados, null, 2);
-  await fs.writeFile('resultado.json', jsonResultados);
 }
 
 const app = express();
 
+app.get('/', async (req, res) => {
+  res.send("Ta funcionando!");
+});
+
 app.get('/resultado', async (req, res) => {
   await processarSteamIds();
 
-  // Ler o arquivo e enviar como resposta
-  const fileContents = await fs.readFile('resultado.json', 'utf-8');
-  res.json(JSON.parse(fileContents));
+  // Envia os resultados como resposta JSON
+  res.json(resultados);
 });
 
 // Inicia o servidor Express na porta 3000 (ou na porta definida pela variável de ambiente PORT)
