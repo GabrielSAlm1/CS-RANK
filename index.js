@@ -27,7 +27,13 @@ async function robo(steamId) {
 
   const qualquerUrl = `https://csstats.gg/player/${steamId}`;
   try {
-    await page.goto(qualquerUrl);
+    const response = await page.goto(qualquerUrl, { waitUntil: 'domcontentloaded' });
+
+    // Adicione uma verificação para garantir que a navegação foi bem-sucedida
+    if (!response || response.status() !== 200) {
+      console.error(`Erro ao processar ${steamId}: Falha na navegação.`);
+      return;
+    }
 
     // Adicione uma verificação para garantir que a página ainda esteja aberta
     if (!page.isClosed()) {
