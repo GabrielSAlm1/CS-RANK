@@ -32,6 +32,7 @@ async function robo(steamId) {
     // Adicione uma verificação para garantir que a navegação foi bem-sucedida
     if (!response || response.status() !== 200) {
       console.error(`Erro ao processar ${steamId}: Falha na navegação.`);
+      await browser.close(); // Feche o navegador em caso de falha
       return;
     }
 
@@ -59,10 +60,11 @@ async function robo(steamId) {
   } catch (error) {
     console.error(`Erro ao processar ${steamId}: ${error}`);
   } finally {
-    // Fechar a página, mas não o navegador, para que seja possível processar outras Steam IDs
+    // Fechar a página e o navegador
     if (!page.isClosed()) {
       await page.close();
     }
+    await browser.close(); // Feche o navegador após cada iteração
   }
 }
 
