@@ -20,7 +20,6 @@ async function robo(steamId) {
       process.env.NODE_ENV === "production"
         ? process.env.PUPPETEER_EXECUTABLE_PATH
         : puppeteer.executablePath(),
-    headless: "new", // Definir para o novo modo Headless
   });
 
   const page = await browser.newPage();
