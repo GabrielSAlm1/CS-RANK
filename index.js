@@ -39,9 +39,11 @@ async function robo(steamId) {
     // Adicione uma verificação para garantir que a página ainda esteja aberta
     if (!page.isClosed()) {
       const resultado = await page.evaluate((steamId) => {
-        let cs2Rank = document.querySelector('#cs2-rank');
-        let cs2Rating = cs2Rank.querySelector('.cs2rating');
-        let spanElement = cs2Rating.querySelector('span');
+        // let cs2Rank = document.querySelector('#cs2-rank');
+        let cs2Rank = document.querySelector('#player-ranks');
+        let cs2Rating1 = cs2Rank.querySelector('.ranks');
+        let cs2Rating2 = cs2Rating1.querySelector('.rank');
+        let spanElement = cs2Rating2.querySelector('span');
 
         return {
           steamId,
