@@ -40,7 +40,9 @@ async function robo(steamId) {
     if (!page.isClosed()) {
       const resultado = await page.evaluate((steamId) => {
         // let cs2Rank = document.querySelector('#cs2-rank');
-        let cs2Rank = document.querySelector('#player-ranks');
+        let player = document.querySelector('#player');
+        let playerProfile = player.querySelector('#player-profile');
+        let cs2Rank = playerProfile.querySelector('#player-ranks');
         let cs2Rating1 = cs2Rank.querySelector('.ranks');
         let cs2Rating2 = cs2Rating1.querySelector('.rank');
         let spanElement = cs2Rating2.querySelector('span');
