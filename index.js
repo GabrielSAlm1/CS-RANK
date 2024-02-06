@@ -45,7 +45,8 @@ async function robo(steamId) {
         let cs2Rank = playerProfile.querySelector('#player-ranks');
         let cs2Rating1 = cs2Rank.querySelector('.ranks');
         let cs2Rating2 = cs2Rating1.querySelector('.rank');
-        let spanElement = cs2Rating2.querySelector('span');
+        let cs2Rating3 = cs2Rating2.querySelector('.cs2rating');
+        let spanElement = cs2Rating3.querySelector('span');
 
         return {
           steamId,
