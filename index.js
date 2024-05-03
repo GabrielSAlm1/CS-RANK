@@ -8,92 +8,13 @@ let intervalId = null;
 
 process.setMaxListeners(20);
 
-async function robo(steamId) {
-  const browser = await puppeteer.launch({
-    args: [
-      "--disable-setuid-sandbox",
-      "--no-sandbox",
-      "--single-process",
-      "--no-zygote",
-    ],
-    executablePath:
-      process.env.NODE_ENV === "production"
-        ? process.env.PUPPETEER_EXECUTABLE_PATH
-        : puppeteer.executablePath(),
-  });
-
-  const page = await browser.newPage();
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 5.1; rv:5.0) Gecko/20100101 Firefox/5.0');
-
-  const qualquerUrl = `https://csstats.gg/player/${steamId}`;
-  try {
-    const response = await page.goto(qualquerUrl, { waitUntil: 'domcontentloaded' });
-
-    // Adicione uma verificação para garantir que a navegação foi bem-sucedida
-    if (!response || response.status() !== 200) {
-      console.error(`Erro ao processar ${steamId}: Falha na navegação.`);
-      await browser.close(); // Feche o navegador em caso de falha
-      return;
-    }
-
-    // Adicione uma verificação para garantir que a página ainda esteja aberta
-    if (!page.isClosed()) {
-      const resultado = await page.evaluate((steamId) => {
-        // let cs2Rank = document.querySelector('#cs2-rank');
-        // let player = document.querySelector('#player');
-        // let playerProfile = player.querySelector('#player-profile');
-        // let cs2Rank = playerProfile.querySelector('#player-ranks');
-        // let cs2Rating1 = cs2Rank.querySelector('.ranks');
-        let cs2Rating2 = document.querySelector('.rank');
-        let spanElement = cs2Rating2.querySelector('span');
-
-        return {
-          steamId,
-          rank: spanElement.textContent.trim(),
-        };
-      }, steamId);
-
-      resultados[steamId] = {
-        steamId,
-        rank: resultado.rank,
-        timestamp: Date.now(),
-      };
-    } else {
-      console.error(`Erro ao processar ${steamId}: Página fechada.`);
-    }
-  } catch (error) {
-    console.error(`Erro ao processar ${steamId}: ${error}`);
-  } finally {
-    // Fechar a página e o navegador
-    if (!page.isClosed()) {
-      await page.close();
-    }
-    await browser.close(); // Feche o navegador após cada iteração
-  }
-}
-
-async function processarSteamIds() {
-  try {
-    const novosResultados = {};
-
-    for (const steamId of steamIds) {
-      await robo(steamId);
-      await esperar(5000);
-    }
-
-    resultados = { ...resultados, ...novosResultados };
-
-    console.log("Processamento concluído.");
-  } catch (error) {
-    console.error('Erro ao processar Steam IDs:', error);
-  }
-}
-
 async function iniciarCiclo() {
   try {
     await processarSteamIds();
     intervalId = setInterval(async () => {
       try {
+        // Limpar resultados antigos para evitar crescimento indefinido
+        resultados = {};
         await processarSteamIds();
       } catch (error) {
         console.error('Erro no ciclo:', error);
@@ -101,6 +22,69 @@ async function iniciarCiclo() {
     }, 30000);
   } catch (error) {
     console.error('Erro ao iniciar ciclo:', error);
+  }
+}
+
+async function processarSteamIds() {
+  try {
+    // Reutilizar o mesmo navegador
+    const browser = await puppeteer.launch({
+      args: [
+        "--disable-setuid-sandbox",
+        "--no-sandbox",
+        "--single-process",
+        "--no-zygote",
+      ],
+      executablePath:
+        process.env.NODE_ENV === "production"
+          ? process.env.PUPPETEER_EXECUTABLE_PATH
+          : puppeteer.executablePath(),
+    });
+
+    for (const steamId of steamIds) {
+      await robo(steamId, browser);
+      await esperar(5000);
+    }
+
+    await browser.close(); // Fechar o navegador após o processamento
+    console.log("Processamento concluído.");
+  } catch (error) {
+    console.error('Erro ao processar Steam IDs:', error);
+  }
+}
+
+async function robo(steamId, browser) {
+  const page = await browser.newPage();
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 5.1; rv:5.0) Gecko/20100101 Firefox/5.0');
+
+  const qualquerUrl = `https://csstats.gg/player/${steamId}`;
+  try {
+    const response = await page.goto(qualquerUrl, { waitUntil: 'domcontentloaded' });
+
+    if (!response || response.status() !== 200) {
+      console.error(`Erro ao processar ${steamId}: Falha na navegação.`);
+      return;
+    }
+
+    const resultado = await page.evaluate((steamId) => {
+      let cs2Rating2 = document.querySelector('.rank');
+      let spanElement = cs2Rating2.querySelector('span');
+
+      return {
+        steamId,
+        rank: spanElement.textContent.trim(),
+      };
+    }, steamId);
+
+    resultados[steamId] = {
+      steamId,
+      rank: resultado.rank,
+      timestamp: Date.now(),
+    };
+  } catch (error) {
+    console.error(`Erro ao processar ${steamId}: ${error}`);
+  } finally {
+    await page.close();
   }
 }
 
